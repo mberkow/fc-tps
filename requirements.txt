@@ -1,6 +1,3 @@
 argparse
-sys
-os
 trolly
-json
 smptlib

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import argparse
+import datetime
 import sys
 import os
 from trolly.client import Client
@@ -12,10 +13,13 @@ from email.mime.text import MIMEText
 
 __version__ = '0.1'
 
-
-# TODO: Put the week as YYYY-WW in the subject
 # TODO: gmail doesn't display markdown :(
-# TODO: we need to archive the items
+# TODO: deal with labels and dropped
+# TODO: figure out when and where we need the client object
+
+# ASSUMPTION: We are using fastbugz style URLs and the 5th possition is the case number
+# ASSUMPTION: The board in question has unique list names
+# ASSUMPTION: The script runs on a day of the week in question. (so the email title looks good)
 
 def make_parser():
     """ Creates an ArgumentParser to parse the command line options. """
@@ -31,6 +35,10 @@ def make_parser():
     parser.add_argument('--list', help='The name of the list to use', default='Done')
     parser.add_argument('--email', help='The email address to send the report to')
     parser.add_argument('--config', help='The location of a configfile', default='config.json')
+    parser.add_argument('--noarchive', help='Do not archive the done items', default=False, action='store_true')
+    parser.add_argument('--nextList', help='The list that holds the next up items')
+    parser.add_argument('--todoList', help='The list that holds the next up items')
+    parser.add_argument('--nomove', help='Do not move cards around', default=False, action='store_true')
 
     return parser
 
@@ -44,6 +52,9 @@ def gen_run_config():
 
     # an empty dict that we will fill
     config = {}
+    # What is the year and weeknumber?
+    now = datetime.datetime.now()
+    config['week'] = "%s-W%s" %(now.year, now.isocalendar()[1])
     # what it says
     required_configs = ['token', 'apikey', 'board', 'msgServer', 'msgSubject', 'msgFrom']
 
@@ -79,7 +90,7 @@ def gen_run_config():
         config['token'] = file_config['token']
 
     # For the rest Let's just itterate over 
-    args = ["debug", "verbose", "board", "list", "email"] 
+    args = ["debug", "verbose", "board", "list", "email", "noarchive", "nextList", "todoList", "nomove"] 
     for argName in args:
         if getattr(arguments, argName):
             config[argName] = getattr(arguments, argName)
@@ -125,6 +136,28 @@ def get_list_obj(**kwargs):
 
     return returnObj
 
+def archive_done_cards(**kwargs):
+    debug = kwargs['debug']
+    verbose = kwargs['verbose']
+    listObj = kwargs['list']
+
+    for cardObj in listObj.getCards():
+        if (verbose):
+            print "Archiving card: %s" % cardObj.id
+        result = cardObj.updateCard({ "closed": "true" })
+
+def move_all_list_cards(**kwargs):
+    debug = kwargs['debug']
+    verbose = kwargs['verbose']
+    fromListObj = kwargs['fromListObj']
+    toListID = kwargs['toListID']
+
+    for cardObj in fromListObj.getCards():
+        if (verbose):
+            print "Moving card %s from list %s to list %s" % (cardObj.id, fromListObj.id, toListID)
+        result = cardObj.updateCard( {"idList" : toListID})
+
+
 def get_list_cards(**kwargs):
     debug = kwargs['debug']
     verbose = kwargs['verbose']
@@ -146,11 +179,14 @@ def gen_markdown_email(**kwargs):
     debug = kwargs['debug']
     verbose = kwargs['verbose']
     cardsList = kwargs['cards']
+    thisweek = kwargs['thisweek']
 
-    msg_text = "This is what we did this week\n"
+    msg_text = "This is what we did this week %s\n" % thisweek
     msg_text += "=============================\n"
 
     for card in cardsList:
+        if(verbose):
+            print "Done Card: %s" % card['name']
         msg_text += "+ \("
         msg_text += "[%s](%s)" % (card['idShort'], card['url'])
         if card['case']:
@@ -179,27 +215,31 @@ def main():
     doneCardsList = get_list_cards(debug=runConfig['debug'], verbose=runConfig['verbose'],  list=doneListObj)
 
     # Generate the email text
-    email_msg = gen_markdown_email(debug=runConfig['debug'], verbose=runConfig['verbose'],  cards=doneCardsList)
+    email_msg = gen_markdown_email(debug=runConfig['debug'], verbose=runConfig['verbose'],  cards=doneCardsList, thisweek=runConfig['week'])
 
-    if runConfig['verbose']:
-        print email_msg
+    # Archive all the cards in the done list
+    if ( not runConfig['noarchive'] ):
+        archive_done_cards(debug=runConfig['debug'], verbose=runConfig['verbose'],  list=doneListObj)
+
+    # Move the up next cards to this week 
+    if ( runConfig['nextList'] and runConfig['todoList'] and not runConfig['nomove']):
+        # Get the list object for nextlist
+        nextListObj = get_list_obj(debug=runConfig['debug'], verbose=runConfig['verbose'], trelloConn=trello_conn, boardID=runConfig['board'], listName=runConfig['nextList'] )
+        # Get the list object for todolist
+        todoListObj = get_list_obj(debug=runConfig['debug'], verbose=runConfig['verbose'], trelloConn=trello_conn, boardID=runConfig['board'], listName=runConfig['todoList'] )
+        # Move the cards
+        result = move_all_list_cards(debug=runConfig['debug'], verbose=runConfig['verbose'], fromListObj=nextListObj, toListID=todoListObj.id)
 
     # send the email!
     if (runConfig['email']):
         msg = MIMEText(email_msg)
-        msg['Subject'] = runConfig['msgSubject']
+        msg['Subject'] = runConfig['msgSubject'] + runConfig['week']
         msg['From'] = runConfig['msgFrom']
         msg['To'] = runConfig['email']
 
         s = smtplib.SMTP(runConfig['msgServer'])
         s.sendmail(runConfig['msgFrom'], [runConfig['email']], msg.as_string())
         s.quit()
-
-
-
-
-
-
 
 if __name__ == '__main__':
     main()

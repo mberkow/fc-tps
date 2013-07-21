@@ -1,0 +1,15 @@
+{"board":"4FgtZ0K1",
+"doneList":"Done",
+"nextList":"Next Week",
+"todoList":"This Week",
+"token":"",
+"apikey":"",
+"email":"",
+"emailFrom":"me@example.com",
+"emailServer":"mail.example.com",
+"emailSubject":"Weekly TPS Report",
+"verbose":0,
+"debug":0,
+"noarchive":0,
+"nomove":0
+}
