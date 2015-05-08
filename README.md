@@ -14,7 +14,7 @@ Assumptions
 ===========
 + We are using fastbugz style URLs and the 5th position is the case number
 + The board in question has unique list names
-+The script runs on a day of the week in question. (so the email title looks good)  
++ The script runs on a day of the week in question. (so the email title looks good)  
 
 TODO
 ====
@@ -22,28 +22,27 @@ TODO
 + deal with labels and dropped
 + figure out when and where we need the client object
 
-
 Usage
 =====
-	mb-tps.py [-h] [-v] [--apikey APIKEY] [--token TOKEN] [--verbose]
-	                 [--debug DEBUG] [--board BOARD] [--list LIST] [--email EMAIL]
-	                 [--config CONFIG] [--noarchive] [--nextList NEXTLIST]
-	                 [--todoList TODOLIST] [--nomove]
+    mb-tps.py [-h] [-v] [--apikey APIKEY] [--token TOKEN] [--verbose]
+                    [--debug DEBUG] [--board BOARD] [--list LIST] [--email EMAIL]
+                    [--config CONFIG] [--noarchive] [--nextList NEXTLIST]
+                    [--todoList TODOLIST] [--nomove]
 
-	Some testing with the trello API.
+    Some testing with the trello API.
 
-	optional arguments:
-	  -h, --help           show this help message and exit
-	  -v, --version        show program's version number and exit
-	  --apikey APIKEY      The Trello API Key.
-	  --token TOKEN        The Trello auth token
-	  --verbose            The script will tell you what it is doing
-	  --debug DEBUG        Set the debugging level
-	  --board BOARD        The ID of the board to use
-	  --list LIST          The name of the list to use
-	  --email EMAIL        The email address to send the report to
-	  --config CONFIG      The location of a configfile
-	  --noarchive          Do not archive the done items
-	  --nextList NEXTLIST  The list that holds the next up items
-	  --todoList TODOLIST  The list that holds the next up items
-	  --nomove             Do not move cards around
+    optional arguments:
+        -h, --help           Show this help message and exit
+        -v, --version        Show program's version number and exit
+        --apikey APIKEY      The Trello API Key.
+        --token TOKEN        The Trello auth token
+        --verbose            The script will tell you what it is doing
+        --debug DEBUG        Set the debugging level
+        --board BOARD        The ID of the board to use
+        --list LIST          The name of the list to use
+        --email EMAIL        The email address to send the report to
+        --config CONFIG      The location of a configfile
+        --noarchive          Do not archive the done items
+        --nextList NEXTLIST  The list that holds the next up items
+        --todoList TODOLIST  The list that holds the next up items
+        --nomove             Do not move cards around
