@@ -14,5 +14,5 @@ if [[ -z $APPKEY ]]; then
     echo "Maybe add an `echo appkey_file` as a n argument"
     exit 1
 else
-    echo $URL$APPKEY
+    echo open -a /Applications/Google\\ Chrome.app \'$URL$APPKEY\'
 fi
